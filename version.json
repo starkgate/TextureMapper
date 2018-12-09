@@ -1,0 +1,16 @@
+{
+  "updates": {
+    "windows": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/",
+      "changelog": "Initial release"
+    },
+    "linux": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/",
+      "changelog": "Initial release"
+    },
+  }
+}
