@@ -4,54 +4,42 @@
 #include <fstream>
 #include <iostream>
 #include <string.h>
-
-#define FATAL_ERROR_LOG -1
+#include <QtCore/QDateTime>
+#include <QTextStream>
+#include "main.h"
+#include "common.hpp"
 
 using namespace std;
 
-const char *log_file = "debug.log";
-ofstream cdbg;
-
-const string currentDateTime() {
-    time_t now = time(nullptr);
-    struct tm tstruct{};
-    char buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "[%Y-%m-%d.%X] ", &tstruct);
-
-    return buf;
+void stream(QTextStream &s1, QTextStream &s2, const QString &msg) {
+    s1 << msg;
+    s2 << msg;
 }
 
-/*
- * Logging utility
- */
+#define stream(X) (stream(s1,s2,X))
 
-void log(basic_string<char> message) {
-    message = currentDateTime() + message;
-    cerr << message << endl;
-    cdbg << message << endl;
-}
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    QTextStream s1(buffer_log.data()); // log to file
+    QTextStream s2((type < 2) ? stdout : stderr); // log to console
 
-void log(const char * message) {
-    log((basic_string<char>) message);
-}
-
-void log(const char * m1, const char * m2) {
-    log((basic_string<char>) m1 + (basic_string<char>) m2);
-}
-
-void log_init() {
-    cdbg.open(log_file);
-    if(!cdbg.is_open()) {
-        cerr << "Error opening debug file" << endl;
-        exit(FATAL_ERROR_LOG);
+    stream(QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss.zzz]"));
+    switch (type) {
+        case QtInfoMsg:     stream("[INFO] "); break;
+        case QtDebugMsg:    stream("[DEBG] "); break;
+        case QtWarningMsg:  stream("[WARN] "); break;
+        case QtCriticalMsg: stream("[CRIT] "); break;
+        case QtFatalMsg:    stream("[FATL] "); break;
     }
-    log("Opened log successfully...");
-}
 
-void log_term() {
-    log("Terminating log...");
-    cdbg.close();
+    if(DEBUG) {
+        s1 << context.function << ":" << context.line << "\t";
+        s2 << context.function << ":" << context.line << "\t";
+    }
+
+    stream(msg);
+    stream("\n");
+    s1.flush();
+    s2.flush(); // Clear the buffered data
 }
 
 #endif

@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QtCore/QThread>
 #include <QtCore/QArgument>
+#include <QtCore/QDateTime>
 
 class MyThread : public QThread {
 Q_OBJECT
@@ -29,7 +30,6 @@ private:
     Ui::MainWindow *ui;
 };
 
-int qt_init(int argc, char *argv[]);
 void initialize();
 void finish();
 
