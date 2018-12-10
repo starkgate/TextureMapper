@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>alot_icon.png</normaloff>alot_icon.png</iconset>
+    <normaloff>bin/alot_icon.png</normaloff>bin/alot_icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
