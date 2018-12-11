@@ -1,10 +1,12 @@
 #include "main.h"
-#include "utility_csv.h"
-#include "utility_sqlite.h"
+#include "lib/sqlite.hpp"
 #include "ui_mainwindow.h"
-#include "utility_logger.h"
+#include "lib/logger.hpp"
 #include <QDir>
 #include <QtWidgets/QFileDialog>
+#include <QtGui/QStandardItem>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -50,16 +52,51 @@ void MainWindow::on_button_go_clicked() {
 
 void MyThread::run() {
     qDebug("Started initialization thread...");
+    QNetworkAccessManager manager;
+    QNetworkReply *response = manager.get(QNetworkRequest(url_version));
+
+    QEventLoop event;
+    QObject::connect(response, SIGNAL(finished()), &event, SLOT(quit()));
+    event.exec();
+
+    if(response->error() != QNetworkReply::NetworkError::NoError) {
+        qCritical("%d error encountered while downloading the version file",
+                  response->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+    } else {
+        QFile version_file("version.json");
+        auto local_json = (QJsonDocument::fromJson(version_file.readAll())).object();
+        auto remote_json = (QJsonDocument::fromJson(response->readAll())).object();
+
+        auto local_db_version = local_json["database-version"].toInt();
+        auto local_main_version = local_json["main-version"].toInt();
+        auto remote_db_version = remote_json["database-version"].toInt();
+        auto remote_main_version = remote_json["main-version"].toInt();
+
+        qDebug("Currently running : TextureMapper v%d, database v%d", local_main_version, local_db_version);
+        qDebug("Latest version : TextureMapper v%d, database v%d", remote_main_version, remote_db_version);
+
+        if(local_db_version < remote_db_version) {
+            qDebug("Database is outdated, removing the old file for update...");
+            QFile(file_database).remove();
+
+            local_json["database-version"] = remote_db_version;
+            version_file.write(QJsonDocument(local_json).toJson());
+        }
+
+        if(local_main_version < remote_main_version) {
+            qWarning("Texture Mapper is outdated, consider updating...");
+            // TODO autoupdate
+        }
+    }
+
     sqlite_init();
+
     qDebug("Initialized Texture Mapper successfully !");
     // TODO progress bar if GUI starts before DB and DB isn't ready ?
 }
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-
-    path_bin = "bin/";
-    file_database = path_bin + "database.db";
 
     path_log = "log/";
     QDir(QDir::currentPath()).mkdir(path_log);

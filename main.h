@@ -33,7 +33,4 @@ private:
     Ui::MainWindow *ui;
 };
 
-void initialize();
-void finish();
-
 #endif

@@ -9,7 +9,7 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
-#include "utility_logger.h"
+#include "lib/logger.hpp"
 #include "common.hpp"
 
 const QString query_create_database_duplicates(
@@ -42,9 +42,6 @@ const QString query_index_database_vanilla(
         "create index index_crc_vanilla on vanilla (crc);");
 
 const QString query_vacuum("vacuum");
-
-const QUrl url_vanilla("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/vanilla.csv");
-const QUrl url_duplicates("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/duplicates.csv");
 
 /*
  * SQLite3 specific utility functions
