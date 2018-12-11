@@ -59,13 +59,14 @@ void MyThread::run() {
     QObject::connect(response, SIGNAL(finished()), &event, SLOT(quit()));
     event.exec();
 
+    QFile version_file("version.json");
+
     if(response->error() != QNetworkReply::NetworkError::NoError) {
         qCritical("%d error encountered while downloading the version file",
                   response->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-    } else {
-        QFile version_file("version.json");
+    } else if(version_file.open(QIODevice::ReadWrite | QIODevice::Truncate)){
         auto local_json = (QJsonDocument::fromJson(version_file.readAll())).object();
-        auto remote_json = (QJsonDocument::fromJson(response->readAll())).object();
+        auto remote_json = (QJsonDocument::fromJson(response->readAll().toStdString().c_str())).object();
 
         auto local_db_version = local_json["database-version"].toInt();
         auto local_main_version = local_json["main-version"].toInt();
@@ -73,20 +74,34 @@ void MyThread::run() {
         auto remote_main_version = remote_json["main-version"].toInt();
 
         qDebug("Currently running : TextureMapper v%d, database v%d", local_main_version, local_db_version);
-        qDebug("Latest version : TextureMapper v%d, database v%d", remote_main_version, remote_db_version);
+        if(local_db_version < remote_db_version || local_main_version < remote_main_version) {
+            qDebug("Latest version : TextureMapper v%d, database v%d", remote_main_version, remote_db_version);
 
-        if(local_db_version < remote_db_version) {
-            qDebug("Database is outdated, removing the old file for update...");
-            QFile(file_database).remove();
+            if(local_db_version < remote_db_version) {
+                qCritical("Database is outdated, removing the old file for update...");
 
-            local_json["database-version"] = remote_db_version;
-            version_file.write(QJsonDocument(local_json).toJson());
+                QFile f(file_database);
+                if(f.exists()) {
+                    f.close();
+                    f.remove();
+                }
+
+                local_json["database-version"] = remote_db_version;
+                local_json["main-version"] = local_main_version;
+                version_file.write(QJsonDocument(local_json).toJson());
+            }
+
+            if(local_main_version < remote_main_version) {
+                qCritical("Texture Mapper is outdated, consider updating manually...");
+                // TODO autoupdate
+            }
+        } else {
+            qDebug("We are running the latest available version of the tools");
         }
 
-        if(local_main_version < remote_main_version) {
-            qWarning("Texture Mapper is outdated, consider updating...");
-            // TODO autoupdate
-        }
+        version_file.close();
+    } else {
+        qCritical("Couldn't check version of the tool");
     }
 
     sqlite_init();

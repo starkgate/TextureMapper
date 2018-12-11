@@ -120,7 +120,7 @@ void sqlite_init() {
     database.open();
     qDebug("Opened database successfully.");
 
-    if(!QFile(file_database).exists()) {
+    if(!QFile(file_database).exists() || QFile(file_database).size() == qint64(0)) {
         qWarning("SQLite database does not exist, creating it...");
         sqlite_create_database();
     } else {
