@@ -3,11 +3,12 @@
 
 #include <fstream>
 #include <iostream>
-#include <string.h>
 #include <QtCore/QDateTime>
 #include <QTextStream>
 #include "main.h"
 #include "common.hpp"
+
+#define DEBUG false // set to true for more debug
 
 using namespace std;
 
@@ -19,6 +20,9 @@ void stream(QTextStream &s1, QTextStream &s2, const QString &msg) {
 #define stream(X) (stream(s1,s2,X))
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    if(!DEBUG && type < 2) // skip debug level and below messages
+        return;
+
     QTextStream s1(buffer_log.data()); // log to file
     QTextStream s2((type < 2) ? stdout : stderr); // log to console
 

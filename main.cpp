@@ -119,8 +119,10 @@ void MainWindow::on_button_go_clicked() {
     QTextStream ts(&result, QIODevice::WriteOnly);
     QString game(QString::number(combobox_game->currentIndex() + 1));
 
-    QDir().mkpath((QDir(path_dest).filePath(QString("ME%1/")).arg(game)));
-    qDebug("Creating path %s", (QDir(path_dest).filePath(QString("ME%1/")).arg(game)).toStdString().c_str());
+    if(file_mode) {
+        QDir().mkpath((QDir(path_dest).filePath(QString("ME%1/")).arg(game)));
+        qDebug("Creating path %s", (QDir(path_dest).filePath(QString("ME%1/")).arg(game)).toStdString().c_str());
+    }
 
     qDebug("Checking duplicates...");
     for (const QFileInfo &entry : file_paths) { // iterate over the selected files
