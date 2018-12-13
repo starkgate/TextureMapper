@@ -7,7 +7,16 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QTextEdit>
 
-#define DEBUG true // set to true for more debug
+#define DEBUG false // set to true for more debug
+
+QString toGrade(QVariant g) {
+    switch (g.toInt()) {
+        case -1: return "<font>s</font>";
+        case 0: return "<font>a</font>";
+        case 1: return "<font color=\"yellow\">b</font>";
+        case 2: return "<font color=\"red\">c</font>";
+    }
+}
 
 /*
  * Files
@@ -29,8 +38,9 @@ QSqlDatabase database;
  * Widgets
  */
 
+MainWindow *w;
 QPushButton *button_go;
-QCheckBox *option_rename;
+QPushButton *button_clear;
 QCheckBox *option_standalone;
 QCheckBox *option_copy;
 QComboBox *combobox_game;
@@ -39,7 +49,9 @@ QTextEdit *text_edit_left;
 QPushButton *file_chooser_dst;
 QPushButton *file_chooser_src;
 
-QString path_dest;
+QString path_dest(QDir::currentPath());
+QFileInfoList file_paths;
+QRegularExpression regex_hash("(0x[a-fA-F0-9]{8})");
 
 /*
  * Urls

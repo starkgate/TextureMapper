@@ -6,6 +6,7 @@
 #include <QtCore/QThread>
 #include <QtCore/QArgument>
 #include <QtCore/QDateTime>
+#include <QtCore/QFileInfo>
 
 class MyThread : public QThread {
 Q_OBJECT
@@ -26,11 +27,12 @@ public:
     void on_file_chooser_dst_clicked();
     void on_file_chooser_src_clicked();
     void on_button_go_clicked();
+    void on_button_clear_clicked();
+    QList<QList<QVariant>> get_duplicates_from_hash(const QString hash);
 
     ~MainWindow();
-
-private:
     Ui::MainWindow *ui;
+
 };
 
 #endif
