@@ -9,10 +9,11 @@
 
 QString toGrade(const QVariant &g) {
     switch (g.toInt()) {
-        case -1: return "<font>s</font>";
+        case -1: return "<font color=\"yellow\">u</font>";
         case 0: return "<font>a</font>";
-        case 1: return "<font color=\"yellow\">b</font>";
+        case 1: return "<font color=\"orange\">b</font>";
         case 2: return "<font color=\"red\">c</font>";
+        case 3: return "<font>s</font>";
     }
 }
 

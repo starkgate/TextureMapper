@@ -71,12 +71,18 @@
           <property name="text">
            <string>Standalone</string>
           </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="option_copy">
           <property name="text">
            <string>Copy</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -120,6 +126,9 @@
        <widget class="QPushButton" name="file_chooser_dst">
         <property name="text">
          <string>Browse destination</string>
+        </property>
+        <property name="enabled">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

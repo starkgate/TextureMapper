@@ -62,6 +62,9 @@ void MainWindow::on_file_chooser_src_clicked() {
         ui->text_edit_right->clear();
         ui->text_edit_left->setText(res);
         ui->text_edit_left->setReadOnly(true);
+        ui->option_copy->setEnabled(true);
+        ui->option_standalone->setEnabled(true);
+        ui->file_chooser_dst->setEnabled(true);
 
         qDebug("Selected %d files, text edit is now read-only", file_paths.size());
     } else {
@@ -69,6 +72,9 @@ void MainWindow::on_file_chooser_src_clicked() {
     }
 }
 
+QString hash_from_int(QVariant number) {
+    return QString("%1").arg(number.toUInt(), 8, 16, QChar('0')).toUpper().prepend("0x");
+}
 
 QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) {
     QString groupid;
@@ -80,7 +86,7 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
         query.exec(query_standalone.arg(hash, selected_game));
 
         if (query.next()) { // found standalone match
-            matches.append({query.value(0), query.value(1), -1, "" });
+            matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
         } else {
             qWarning("Texture not found in vanilla database, skipping...");
             return matches;
@@ -92,7 +98,9 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
         groupid = query.value(0).toString();
         query.exec(query_duplicates.arg(groupid, selected_game)); // get duplicates from groupid
         while (query.next()) { // found duplicate match(es)
-            matches.append({query.value(0), query.value(1), query.value(2), query.value(3)});
+            QString crc = hash_from_int(query.value(0));
+            if(crc != hash)
+                matches.append({crc, query.value(1), query.value(2), query.value(3)});
         }
     } else { // if we find no match
         qDebug("No groupid matches %s", hash.toStdString().c_str());
@@ -103,6 +111,7 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
 
 void MainWindow::on_button_go_clicked() {
     bool file_mode = ui->text_edit_left->isReadOnly();
+    bool copy_mode = ui->option_copy->isChecked();
 
     if(!file_mode) { // if we're in string mode, fill the paths with "fake" QFileInfos
         file_paths.clear();
@@ -119,7 +128,7 @@ void MainWindow::on_button_go_clicked() {
     QTextStream ts(&result, QIODevice::WriteOnly);
     QString game(QString::number(combobox_game->currentIndex() + 1));
 
-    if(file_mode) {
+    if(copy_mode) {
         QDir().mkpath((QDir(path_dest).filePath(QString("ME%1/")).arg(game)));
         qDebug("Creating path %s", (QDir(path_dest).filePath(QString("ME%1/")).arg(game)).toStdString().c_str());
     }
@@ -133,9 +142,10 @@ void MainWindow::on_button_go_clicked() {
             QString hash = match.captured(0);
 
             // get duplicates
-            for (QList<QVariant> search : get_duplicates_from_hash(hash)) {
+            QList<QList<QVariant>> search_results = get_duplicates_from_hash(hash);
+            for (QList<QVariant> search : search_results) {
 
-                QString crc = QString("%1").arg(search[0].toUInt(), 8, 16, QChar('0')).toUpper().prepend("0x");
+                QString crc = search[0].toString();
                 QString name = search[1].toString();
                 QString grade = toGrade(search[2]);
                 QString notes = search[3].toString();
@@ -143,14 +153,15 @@ void MainWindow::on_button_go_clicked() {
                 ts << (QString("%1 -> %2 (%3) %4, %5<br>")).arg(hash, crc, grade, name, notes);
 
                 // copy files if copy is checked and we're in file mode
-                if (ui->option_copy->isChecked() && file_mode) {
+                if (copy_mode && file_mode) {
                     QString file_name_dest = QDir(path_dest).filePath(QString("ME%1/%2_%3.%4")).arg(game, name, crc, entry.suffix());
                     QFile::copy(entry.absoluteFilePath(), QDir(path_dest).filePath(file_name_dest));
                     qDebug("Copying %s to %s", entry.absoluteFilePath().toStdString().c_str(), file_name_dest.toStdString().c_str());
                 }
             }
+            if(!search_results.isEmpty())
+                ts << "<br>";
         }
-        ts << "<br>";
     }
 
     ui->text_edit_right->setText(result);
@@ -161,6 +172,9 @@ void MainWindow::on_button_clear_clicked() {
     ui->text_edit_right->clear();
     ui->text_edit_left->clear();
     ui->text_edit_left->setReadOnly(false);
+    ui->option_copy->setEnabled(false);
+    ui->option_standalone->setEnabled(false);
+    ui->file_chooser_dst->setEnabled(false);
     file_paths.clear();
 }
 
