@@ -2,7 +2,9 @@
 
 Cross-platform (Linux, Windows) GUI tool for texture work in the Mass Effect games. Written in C++ using Qt5.
 
-This is the third iteration of the project. Each iteration was an exercise I set for myself for learning purposes. This is the first one I am completely satisfied with. The other two :
+![presentation](https://i.imgur.com/xXLdFSW.png)
+
+This is the third iteration of the project. Each iteration was an exercise I set for myself for learning purposes. This is the first one I am completely satisfied with : it is feature-complete, fast, lightweight and portable. The other two :
 
 - [The first](https://github.com/CreeperLava/MassEffectTextureMapper) (Java, JavaFX). Very inefficient memory-wise, slow, uses too many third-party libraries. Partly due to my inexperience at the time, partly because it's Java.
 - [The second](https://github.com/CreeperLava/TextureMapperRuby) (Ruby, GTK3). Ruby is great, but a script language, and thus not compileable and easily redistributable.
@@ -37,6 +39,8 @@ If you want to port existing textures to another game (eg find duplicates of ME3
 
 1. Browse for the files you wish to port from the top left dialog. The selected files will be displayed in the left pane, one per line. Once you've selected files, you can't edit the left pane anymore, until you hit the Clear button.
 
+![first](https://i.imgur.com/1Yzhv0V.png)
+
 2. Select the options you need.
 
 Standalone : show all the duplicates of a texture, including itself; otherwise show all the duplicates, excluding itself.
@@ -47,4 +51,8 @@ Copy : makes as many copies of your texture as there are duplicates, and renames
 
 4. Select the folder you want the ported textures to be copied into from the top right dialog. By default it is set to where you selected the files.
 
+![second](https://i.imgur.com/PWJjdJF.png)
+
 5. Click Go. The tool will match your hashes with the database, and display the results in the right pane. If you selected the copy option, it will copy the matches in a subfolder.
+
+![third](https://i.imgur.com/0Y3a1I5.png)
