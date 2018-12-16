@@ -37,3 +37,10 @@ cmake-build-debug
 *.txt
 *.bak
 *.db
+
+# Qt
+Makefile*
+.qmake.stash
+*.pro.user
+*_plugin_import.cpp
+ui_*.h

@@ -9,8 +9,15 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
-#include "lib/logger.hpp"
+#include "logger.hpp"
 #include "common.hpp"
+
+/*
+ * SQLite
+ */
+
+const QUrl url_vanilla("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/vanilla.csv");
+const QUrl url_duplicates("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/duplicates.csv");
 
 const QString query_create_database_duplicates(
         "create table duplicates ("
@@ -51,14 +58,14 @@ const QString query_duplicates ("select crc, name, grade, notes from duplicates 
  * SQLite3 specific utility functions
  */
 
-void sqlite_check_query(QSqlQuery &query) {
+void MainWindow::sqlite_check_query(QSqlQuery &query) {
     if(!query.isActive()) {
         qCritical("Couldn't execute query: %s", query.executedQuery().toStdString().c_str());
         qCritical("Error: %s", query.lastError().text().toStdString().c_str());
     }
 }
 
-void sqlite_fill_database(QSqlQuery &query) {
+void MainWindow::sqlite_fill_database(QSqlQuery &query) {
     QNetworkAccessManager manager;
     QNetworkReply *response_duplicates = manager.get(QNetworkRequest(url_duplicates));
     QNetworkReply *response_vanilla = manager.get(QNetworkRequest(url_vanilla));
@@ -100,7 +107,7 @@ void sqlite_fill_database(QSqlQuery &query) {
     database.commit();
 }
 
-void sqlite_create_database() {
+void MainWindow::sqlite_create_database() {
     QSqlQuery query(database);
     query.setForwardOnly(true);
 
@@ -116,10 +123,11 @@ void sqlite_create_database() {
     qDebug("Filled database successfully");
 }
 
-void sqlite_init() {
+void MainWindow::sqlite_init() {
     qDebug("%s %s...", "Opening database at",
            QDir::toNativeSeparators(QDir(file_database).absolutePath()).toStdString().c_str());
-    database = QSqlDatabase::addDatabase("QSQLITE", file_database);
+
+    database = QSqlDatabase::addDatabase("QSQLITE");
     database.setDatabaseName(file_database);
     database.open();
     qDebug("Opened database successfully.");
@@ -134,7 +142,7 @@ void sqlite_init() {
     qDebug("Initialized SQLite successfully...");
 }
 
-void sqlite_term() {
+void MainWindow::sqlite_term() {
     qDebug("%s %s...", "Closing database", database.connectionName().toStdString().c_str());
     database.close();
     qDebug("Closed database successfully.");

@@ -8,7 +8,7 @@
 #include "main.h"
 #include "common.hpp"
 
-#define DEBUG false // set to true for more debug
+#define DEBUG true // set to true for more debug
 
 using namespace std;
 
@@ -17,22 +17,20 @@ void stream(QTextStream &s1, QTextStream &s2, const QString &msg) {
     s2 << msg;
 }
 
-#define stream(X) (stream(s1,s2,X))
-
-void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+void MainWindow::messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
     if(!DEBUG && type < 2) // skip debug level and below messages
         return;
 
     QTextStream s1(buffer_log.data()); // log to file
     QTextStream s2((type < 2) ? stdout : stderr); // log to console
 
-    stream(QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss.zzz]"));
+    stream(s1, s2, QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss.zzz]"));
     switch (type) {
-        case QtInfoMsg:     stream("[INFO] "); break;
-        case QtDebugMsg:    stream("[DEBG] "); break;
-        case QtWarningMsg:  stream("[WARN] "); break;
-        case QtCriticalMsg: stream("[CRIT] "); break;
-        case QtFatalMsg:    stream("[FATL] "); break;
+        case QtInfoMsg:     stream(s1, s2, "[INFO] "); break;
+        case QtDebugMsg:    stream(s1, s2, "[DEBG] "); break;
+        case QtWarningMsg:  stream(s1, s2, "[WARN] "); break;
+        case QtCriticalMsg: stream(s1, s2, "[CRIT] "); break;
+        case QtFatalMsg:    stream(s1, s2, "[FATL] "); break;
     }
 
     if(DEBUG) {
@@ -40,8 +38,8 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
         s2 << context.function << ":" << context.line << "\t";
     }
 
-    stream(msg);
-    stream("\n");
+    stream(s1, s2, msg);
+    stream(s1, s2, "\n");
     s1.flush();
     s2.flush(); // Clear the buffered data
 }

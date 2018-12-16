@@ -1,7 +1,7 @@
+#include "sqlite.hpp"
 #include "main.h"
-#include "lib/sqlite.hpp"
-#include "ui_mainwindow.h"
-#include "lib/logger.hpp"
+#include "ui_texturemapper.h"
+#include "logger.hpp"
 #include <QDir>
 #include <QtWidgets/QFileDialog>
 #include <QtGui/QStandardItem>
@@ -9,7 +9,23 @@
 #include <QtCore/QJsonObject>
 #include <QFontDatabase>
 
+const QUrl url_version = QUrl("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/version.json");
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+    // LOGGING
+    QString path_log = "log/";
+    QDir(QDir::currentPath()).mkdir(path_log);
+    file_log = new QFile(path_log + QDateTime::currentDateTime().toString("yyyy-MM-dd") + "-TextureMapper.log");
+    file_log->open(QFile::WriteOnly); // reset the file if it already exists
+
+    buffer_log.reset(file_log);
+    buffer_log.data()->open(QFile::Append | QFile::Text | QFile::WriteOnly);
+    qInstallMessageHandler(MainWindow::messageHandler);
+
+    // THREAD INIT
+    thread_init = std::thread(run_init_thread, this); // separate thread for database creation / update
+
+    // UI
     ui->setupUi(this);
 
     option_copy = this->findChild<QCheckBox *>("option_copy");
@@ -33,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow() {
     sqlite_term();
+    file_log->close();
     delete ui;
 }
 
@@ -72,17 +89,13 @@ void MainWindow::on_file_chooser_src_clicked() {
     }
 }
 
-QString hash_from_int(QVariant number) {
-    return QString("%1").arg(number.toUInt(), 8, 16, QChar('0')).toUpper().prepend("0x");
-}
-
 QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) {
     QString groupid;
     QList<QList<QVariant>> matches; // { crc, name, grade, notes }
-    QString selected_game(QString::number(w->ui->combobox_game->currentIndex() + 1));
+    QString selected_game(QString::number(ui->combobox_game->currentIndex() + 1));
     QSqlQuery query(database);
 
-    if (w->ui->option_standalone->isChecked()) { // if we are in standalone mode
+    if (ui->option_standalone->isChecked()) { // if we are in standalone mode
         query.exec(query_standalone.arg(hash, selected_game));
 
         if (query.next()) { // found standalone match
@@ -147,7 +160,7 @@ void MainWindow::on_button_go_clicked() {
 
                 QString crc = search[0].toString();
                 QString name = search[1].toString();
-                QString grade = toGrade(search[2]);
+                QString grade = int_to_grade(search[2]);
                 QString notes = search[3].toString();
 
                 ts << (QString("%1 -> %2 (%3) %4, %5<br>")).arg(hash, crc, grade, name, notes);
@@ -178,7 +191,7 @@ void MainWindow::on_button_clear_clicked() {
     file_paths.clear();
 }
 
-void MyThread::run() {
+void MainWindow::run_init_thread(MainWindow *w) {
     qDebug("Started initialization thread...");
     QNetworkAccessManager manager;
     QNetworkReply *response = manager.get(QNetworkRequest(url_version));
@@ -208,7 +221,7 @@ void MyThread::run() {
             if (local_db_version < remote_db_version) {
                 qCritical("Database is outdated, removing the old file for update...");
 
-                QFile f(file_database);
+                QFile f = QFile("database.db");
                 if (f.exists()) {
                     f.close();
                     f.remove();
@@ -231,7 +244,7 @@ void MyThread::run() {
     }
 
     version_file.close();
-    sqlite_init();
+    w->sqlite_init();
 
     qDebug("Initialized Texture Mapper successfully !");
 }
@@ -239,19 +252,7 @@ void MyThread::run() {
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    path_log = "log/";
-    QDir(QDir::currentPath()).mkdir(path_log);
-    file_log = new QFile(path_log + QDateTime::currentDateTime().toString("yyyy-MM-dd") + "-TextureMapper.log");
-    file_log->open(QFile::WriteOnly); // reset the file if it already exists
-
-    buffer_log.reset(file_log);
-    buffer_log.data()->open(QFile::Append | QFile::Text | QFile::WriteOnly);
-    qInstallMessageHandler(messageHandler);
-
-    MyThread thread_init;
-    thread_init.start(); // separate thread for database creation / update
-
-    w = new MainWindow();
+    MainWindow *w = new MainWindow();
     w->show();
 
     return app.exec();
