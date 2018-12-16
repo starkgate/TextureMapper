@@ -25,7 +25,7 @@ You can for example point the TextureMapper to a folder where your textures are,
 
 **Requirements**
 
-The tool works both on Linux and Windows. Linux requires Qt5. Windows has no requirements, unless you're compiling from source.
+The tool works both on Linux and Windows. Linux requires Qt 5.12. Windows has no requirements, unless you're compiling from source.
 
 **Usage**
 
