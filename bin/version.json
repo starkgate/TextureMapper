@@ -1,16 +1,4 @@
 {
-  "updates": {
-    "windows": {
-      "open-url": "",
-      "latest-version": "1.0",
-      "download-url": "https://raw.githubusercontent.com/alex-spataru/QSimpleUpdater/master/tutorial/download/YesItWorks.jpg",
-      "changelog": "This is an example changelog for Windows. Go on..."
-    },
-    "linux": {
-      "open-url": "",
-      "latest-version": "1.0",
-      "download-url": "https://raw.githubusercontent.com/alex-spataru/QSimpleUpdater/master/tutorial/download/YesItWorks.jpg",
-      "changelog": "This is an example changelog for Linux. Go on..."
-    }
-  }
+    "database-version": 2,
+    "main-version": 0
 }
