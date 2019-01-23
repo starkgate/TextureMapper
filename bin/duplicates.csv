@@ -7549,3 +7549,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8568,3,0x1B4FCFB7,"AlliDropShip_Dirty_Frt_Norm",512,512,0,"V8U8",""
 8568,3,0x3B4D9D12,"CerDropShip_Dam_Frt_Norm",256,256,-1,"V8U8",""
 8568,3,0x83C1FFF3,"AlliDropShip_Dam_Frt_Norm",256,256,0,"V8U8",""
+8569,3,0xC4067DE0,"Hrv_Wing",64,64,1,"ARGB",""
+8569,3,0x4980CF57,"Hrv_Wing",64,64,1,"DXT5","Slightly different green layer"
