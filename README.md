@@ -43,9 +43,9 @@ If you want to port existing textures to another game (eg find duplicates of ME3
 
 2. Select the options you need.
 
-Standalone : show all the duplicates of a texture, including itself; otherwise show all the duplicates, excluding itself.
-
 Copy : makes as many copies of your texture as there are duplicates, and renames those copies accordingly. There will be no overwriting of the files you selected, the ported textures will be pasted in a subfolder named ME1, ME2 or ME3 depending on the game you next choose.
+
+Names : attempt to detect the hash based only on the name of textures. Don't use this option if you don't know what you're doing.
 
 3. Select the game you wish to port your textures to. The tool doesn't care from which game your hashes actually come from, only in which game it should find matching duplicates. You could mix hashes from ME1, ME2 and ME3 and it would work just fine.
 

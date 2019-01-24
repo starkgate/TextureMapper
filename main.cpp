@@ -8,6 +8,7 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QFontDatabase>
+#include <QtCore/QStringBuilder>
 
 const QUrl url_version = QUrl("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/version.json");
 
@@ -29,12 +30,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
 
     option_copy = this->findChild<QCheckBox *>("option_copy");
-    option_standalone = this->findChild<QCheckBox *>("option_standalone");
+    option_names = this->findChild<QCheckBox *>("option_names");
 
     combobox_game = this->findChild<QComboBox *>("combobox_game");
     text_edit_left = this->findChild<QTextEdit *>("text_edit_left");
     text_edit_right = this->findChild<QTextEdit *>("text_edit_right");
     text_edit_right->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    line_edit_search = this->findChild<QLineEdit *>("line_edit_search");
 
     button_go = this->findChild<QPushButton *>("button_go");
     button_clear = this->findChild<QPushButton *>("button_clear");
@@ -45,12 +47,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     QObject::connect(button_clear, &QPushButton::clicked, this, &MainWindow::on_button_clear_clicked);
     QObject::connect(file_chooser_dst, &QPushButton::clicked, this, &MainWindow::on_file_chooser_dst_clicked);
     QObject::connect(file_chooser_src, &QPushButton::clicked, this, &MainWindow::on_file_chooser_src_clicked);
+    QObject::connect(line_edit_search, &QLineEdit::textEdited, this, &MainWindow::on_line_edit_text_edited);
 }
 
 MainWindow::~MainWindow() {
     sqlite_term();
     file_log->close();
+    if(thread_copy.joinable()) {
+        qDebug("Waiting for copy thread to be done...");
+        thread_copy.join();
+    }
     delete ui;
+}
+void MainWindow::on_line_edit_text_edited(const QString &str) {
+    if(tmp_filter.isEmpty()) { // backup the old content of text edit right
+        tmp_filter = ui->text_edit_right->toPlainText().split("\n");
+    }
+
+    if(!str.isEmpty()) { // if line edit is empty, we reset right pane
+        QStringList res;
+        for(QString s : tmp_filter)
+            if (s.contains(str, Qt::CaseInsensitive))
+                res += s;
+        ui->text_edit_right->setText(res.join("\n"));
+    } else {
+        ui->text_edit_right->setText(tmp_filter.join("\n"));
+    }
 }
 
 void MainWindow::on_file_chooser_dst_clicked() {
@@ -77,10 +99,10 @@ void MainWindow::on_file_chooser_src_clicked() {
         }
 
         ui->text_edit_right->clear();
+        tmp_filter.clear();
         ui->text_edit_left->setText(res);
         ui->text_edit_left->setReadOnly(true);
         ui->option_copy->setEnabled(true);
-        ui->option_standalone->setEnabled(true);
         ui->file_chooser_dst->setEnabled(true);
 
         qDebug("Selected %d files, text edit is now read-only", file_paths.size());
@@ -95,21 +117,18 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
     QString selected_game(QString::number(ui->combobox_game->currentIndex() + 1));
     QSqlQuery query(database);
 
-    if (ui->option_standalone->isChecked()) { // if we are in standalone mode
-        query.exec(query_standalone.arg(hash, selected_game));
-
-        if (query.next()) { // found standalone match
-            matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
-        } else {
-            qWarning("Texture not found in vanilla database, skipping...");
-            return matches;
-        }
+    query.exec(query_standalone.arg(hash, selected_game));
+    if (query.next()) { // found standalone match
+        matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
+    } else {
+        qWarning("Texture not found in vanilla database, skipping...");
+        return matches;
     }
 
     query.exec(query_groupid.arg(hash)); // get groupid from hash
     if (query.next()) { // iterate through the results
         groupid = query.value(0).toString();
-        query.exec(query_duplicates.arg(groupid, selected_game)); // get duplicates from groupid
+        query.exec(query_duplicates.arg(groupid, selected_game, hash)); // get duplicates from groupid
         while (query.next()) { // found duplicate match(es)
             QString crc = hash_from_int(query.value(0));
             if(crc != hash)
@@ -122,20 +141,33 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
     return matches;
 }
 
+void MainWindow::generate_file_paths() {
+    // if we're in string mode, generate "fake" QFileInfos to fill file_paths
+    file_paths.clear();
+    for(QString s : ui->text_edit_left->toPlainText().split("\n", QString::SkipEmptyParts)) {
+        file_paths.append(QFileInfo(s));
+    }
+}
+
+QList<QString> MainWindow::get_hashes_from_name(const QString name) {
+    QSqlQuery query(database);
+    QList<QString> matches;
+
+    query.exec(query_name.arg(name)); // get all hashes that match the name
+    while (query.next()) { // for each match, get all reusable textures
+        matches.append(query.value(0).toString());
+    }
+    return matches;
+}
+
 void MainWindow::on_button_go_clicked() {
     bool file_mode = ui->text_edit_left->isReadOnly();
     bool copy_mode = ui->option_copy->isChecked();
+    bool names_mode = ui->option_names->isChecked();
 
-    if(!file_mode) { // if we're in string mode, fill the paths with "fake" QFileInfos
-        file_paths.clear();
-        for(QString s : ui->text_edit_left->toPlainText().split("\n", QString::SkipEmptyParts)) {
-            file_paths.append(QFileInfo(s));
-        }
-    }
-
-    if(file_paths.isEmpty()) {
-        return;
-    }
+    // CHECKS
+    if(!file_mode) generate_file_paths();
+    if(file_paths.isEmpty()) return;
 
     QString result;
     QTextStream ts(&result, QIODevice::WriteOnly);
@@ -151,30 +183,45 @@ void MainWindow::on_button_go_clicked() {
         QRegularExpressionMatch match = regex_hash.match(entry.fileName());
 
         // check presence of hash in filename
+        QList<QString> hashes;
         if (match.hasMatch()) {
-            QString hash = match.captured(0);
-
-            // get duplicates
-            QList<QList<QVariant>> search_results = get_duplicates_from_hash(hash);
-            for (QList<QVariant> search : search_results) {
-
-                QString crc = search[0].toString();
-                QString name = search[1].toString();
-                QString grade = int_to_grade(search[2]);
-                QString notes = search[3].toString();
-
-                ts << (QString("%1 -> %2 (%3) %4, %5<br>")).arg(hash, crc, grade, name, notes);
-
-                // copy files if copy is checked and we're in file mode
-                if (copy_mode && file_mode) {
-                    QString file_name_dest = QDir(path_dest).filePath(QString("ME%1/%2_%3.%4")).arg(game, name, crc, entry.suffix());
-                    QFile::copy(entry.absoluteFilePath(), QDir(path_dest).filePath(file_name_dest));
-                    qDebug("Copying %s to %s", entry.absoluteFilePath().toStdString().c_str(), file_name_dest.toStdString().c_str());
-                }
+            hashes.append(match.captured(0));
+            qDebug("Found matching hash");
+            names_mode = false;
+        } else if(names_mode) {
+            for(QString hash : get_hashes_from_name(entry.fileName())) {
+                hashes.append(hash_from_int(hash));
             }
-            if(!search_results.isEmpty())
-                ts << "<br>";
+            qDebug("Found %d matching hashes", hashes.size());
         }
+
+        QList<QList<QVariant>> search_results;
+        for(QString hash : hashes) {
+            search_results = get_duplicates_from_hash(hash);
+
+            if(!search_results.isEmpty()) {
+                ts << hash << (names_mode ? " <font color=\"orange\">(from name)</font><br>" : "<br>");
+                for (QList<QVariant> search : search_results) {
+                    QString crc = search[0].toString();
+                    QString name = search[1].toString();
+                    QString grade = int_to_grade(search[2]);
+                    QString notes = search[3].toString();
+
+                    ts << (QString("%1 (%2) %3, %4<br>")).arg(crc, grade, name, notes);
+
+                    // copy files if copy is checked and we're in file mode
+                    if (copy_mode && file_mode) {
+                        QString file_name_dest = QDir(path_dest).filePath(QString("ME%1/%2_%3.%4")).arg(game, name, crc, entry.suffix());
+                        copy_queue.enqueue(QPair(entry.absoluteFilePath(),QDir(path_dest).filePath(file_name_dest)));
+                    }
+                }
+                ts << "<br>";
+            }
+        }
+    }
+
+    if(copy_mode) {
+        thread_copy = std::thread(run_copy_thread, copy_queue);
     }
 
     ui->text_edit_right->setText(result);
@@ -183,12 +230,30 @@ void MainWindow::on_button_go_clicked() {
 void MainWindow::on_button_clear_clicked() {
     qDebug("Clearing data");
     ui->text_edit_right->clear();
+    tmp_filter.clear();
     ui->text_edit_left->clear();
     ui->text_edit_left->setReadOnly(false);
     ui->option_copy->setEnabled(false);
-    ui->option_standalone->setEnabled(false);
     ui->file_chooser_dst->setEnabled(false);
     file_paths.clear();
+}
+
+void MainWindow::run_copy_thread(QQueue<QPair<QString, QString>> files) {
+    QPair<QString, QString> file;
+    while(!files.isEmpty()) {
+        file = files.dequeue();
+        qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
+
+        if(QFile(file.second).exists() && QFile(file.second).size() < QFile(file.first).size()) {
+            qDebug("Destination already exists. Overwriting with larger file.");
+            QFile::remove(file.second);
+            QFile::copy(file.first, file.second);
+        } else if(!QFile(file.second).exists()) {
+            QFile::copy(file.first, file.second);
+        } else {
+            qDebug("Abort copy.");
+        }
+    }
 }
 
 void MainWindow::run_init_thread(MainWindow *w) {

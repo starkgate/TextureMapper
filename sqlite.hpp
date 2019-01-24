@@ -52,7 +52,8 @@ const QString query_vacuum("vacuum");
 
 const QString query_standalone ("select crc, name from vanilla where crc=%1 and game=%2 limit 1");
 const QString query_groupid ("select groupid from duplicates where crc=%1 limit 1");
-const QString query_duplicates ("select crc, name, grade, notes from duplicates where groupid=%1 and game=%2");
+const QString query_duplicates ("select crc, name, grade, notes from duplicates where groupid=%1 and game=%2 and not crc=%3");
+const QString query_name ("select crc from vanilla where name='%1'");
 
 /*
  * SQLite3 specific utility functions

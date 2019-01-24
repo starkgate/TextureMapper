@@ -4,7 +4,7 @@ TARGET = texturemapper
 TEMPLATE = app
 SOURCES += main.cpp logger.hpp sqlite.hpp
 HEADERS += main.h common.hpp
-RESOURCES = Resources.qrc
+RESOURCES = resources.qrc
 FORMS += texturemapper.ui
 CONFIG += c++17
 

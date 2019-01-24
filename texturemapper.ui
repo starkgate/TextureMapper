@@ -20,7 +20,7 @@
    <string>Mass Effect Texture Mapper</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="resources.qrc">
     <normaloff>:/icon</normaloff>:/icon</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
@@ -46,7 +46,7 @@
        <number>8</number>
       </property>
       <item row="3" column="0">
-       <layout class="QHBoxLayout" name="hl1" stretch="0,0,0,0,0">
+       <layout class="QHBoxLayout" name="hl1" stretch="0,0,0,0">
         <property name="spacing">
          <number>8</number>
         </property>
@@ -67,22 +67,25 @@
          </spacer>
         </item>
         <item>
-         <widget class="QCheckBox" name="option_standalone">
-          <property name="text">
-           <string>Standalone</string>
+         <widget class="QCheckBox" name="option_names">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to detect the hash based only on the name of textures. Don't use this option if you don't know what you're doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
-          <property name="enabled">
-           <bool>false</bool>
+          <property name="text">
+           <string>Names</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="option_copy">
-          <property name="text">
-           <string>Copy</string>
-          </property>
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Makes as many copies of your texture as there are duplicates, and renames those copies accordingly. There will be no overwriting of the files you selected, the ported textures will be pasted in a subfolder named ME1, ME2 or ME3 depending on the game you next choose.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Copy</string>
           </property>
          </widget>
         </item>
@@ -93,6 +96,9 @@
             <width>80</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the game you wish to port your textures to. The tool doesn't care from which game your hashes actually come from, only in which game it should find matching duplicates. You could mix hashes from ME1, ME2 and ME3 and it would work just fine.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="editable">
            <bool>false</bool>
@@ -124,16 +130,22 @@
       </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="file_chooser_dst">
-        <property name="text">
-         <string>Browse destination</string>
-        </property>
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the folder you want the ported textures to be copied into. By default it is set to where you selected the files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Browse destination</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
        <widget class="QPushButton" name="file_chooser_src">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse for the files you wish to port. The selected files will be displayed in the left pane below, one per line. Once you've selected files, you can't edit the left pane anymore, until you hit the Clear button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Add files</string>
         </property>
@@ -141,6 +153,16 @@
       </item>
       <item row="3" column="1">
        <layout class="QHBoxLayout" name="hl2">
+        <item>
+         <widget class="QLineEdit" name="line_edit_search">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter the results.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="placeholderText">
+           <string>Search...</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <spacer name="h1">
           <property name="orientation">
@@ -171,6 +193,9 @@
          <widget class="QPushButton" name="button_go">
           <property name="enabled">
            <bool>true</bool>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The tool will match your hashes with the database, and display the results in the right pane. If you selected the copy option, it will copy the matches in a subfolder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="layoutDirection">
            <enum>Qt::RightToLeft</enum>
@@ -208,6 +233,8 @@
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
