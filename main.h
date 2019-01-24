@@ -40,7 +40,7 @@ public:
 
     QList<QString> get_hashes_from_name(const QString name);
     void generate_file_paths();
-    static void run_copy_thread(QQueue<QPair<QString, QString>> copy_queue);
+    static void run_copy_thread(MainWindow *w);
     static void run_init_thread(MainWindow *w);
 
     static void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
@@ -61,7 +61,8 @@ public:
     QSqlDatabase database;
     const QString file_database = "database.db";
     const QLineEdit *line_edit_search;
-    QStringList tmp_filter;
+    QStringList plaintext_backup;
+    QString html_backup;
 
     QString path_dest = QDir::currentPath();
     QFileInfoList file_paths;

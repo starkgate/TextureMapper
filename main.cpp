@@ -60,18 +60,19 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 void MainWindow::on_line_edit_text_edited(const QString &str) {
-    if(tmp_filter.isEmpty()) { // backup the old content of text edit right
-        tmp_filter = ui->text_edit_right->toPlainText().split("\n");
+    if(plaintext_backup.isEmpty()) { // backup the old content of text edit right
+        html_backup = ui->text_edit_right->toHtml();
+        plaintext_backup = ui->text_edit_right->toPlainText().split("\n");
     }
 
     if(!str.isEmpty()) { // if line edit is empty, we reset right pane
         QStringList res;
-        for(QString s : tmp_filter)
+        for(QString s : plaintext_backup)
             if (s.contains(str, Qt::CaseInsensitive))
                 res += s;
         ui->text_edit_right->setText(res.join("\n"));
     } else {
-        ui->text_edit_right->setText(tmp_filter.join("\n"));
+        ui->text_edit_right->setText(html_backup);
     }
 }
 
@@ -99,7 +100,7 @@ void MainWindow::on_file_chooser_src_clicked() {
         }
 
         ui->text_edit_right->clear();
-        tmp_filter.clear();
+        plaintext_backup.clear();
         ui->text_edit_left->setText(res);
         ui->text_edit_left->setReadOnly(true);
         ui->option_copy->setEnabled(true);
@@ -179,6 +180,7 @@ void MainWindow::on_button_go_clicked() {
     }
 
     qDebug("Checking duplicates...");
+    bool from_name;
     for (const QFileInfo &entry : file_paths) { // iterate over the selected files
         QRegularExpressionMatch match = regex_hash.match(entry.fileName());
 
@@ -186,13 +188,17 @@ void MainWindow::on_button_go_clicked() {
         QList<QString> hashes;
         if (match.hasMatch()) {
             hashes.append(match.captured(0));
-            qDebug("Found matching hash");
-            names_mode = false;
+            qDebug("Found matching hash for %s", match.captured(0).toStdString().c_str());
+            from_name = false;
         } else if(names_mode) {
-            for(QString hash : get_hashes_from_name(entry.fileName())) {
-                hashes.append(hash_from_int(hash));
+            QList<QString> h = get_hashes_from_name(entry.baseName());
+            if(!h.isEmpty()) {
+                for(QString hash : h) {
+                    hashes.append(hash_from_int(hash));
+                }
+                qDebug("Found %d matching hashes for name %s", hashes.size(), entry.fileName().toStdString().c_str());
+                from_name = true;
             }
-            qDebug("Found %d matching hashes", hashes.size());
         }
 
         QList<QList<QVariant>> search_results;
@@ -200,7 +206,7 @@ void MainWindow::on_button_go_clicked() {
             search_results = get_duplicates_from_hash(hash);
 
             if(!search_results.isEmpty()) {
-                ts << hash << (names_mode ? " <font color=\"orange\">(from name)</font><br>" : "<br>");
+                ts << hash << (from_name ? " <font color=\"orange\">(from name)</font><br>" : "<br>");
                 for (QList<QVariant> search : search_results) {
                     QString crc = search[0].toString();
                     QString name = search[1].toString();
@@ -221,16 +227,19 @@ void MainWindow::on_button_go_clicked() {
     }
 
     if(copy_mode) {
-        thread_copy = std::thread(run_copy_thread, copy_queue);
+        thread_copy = std::thread(run_copy_thread, this);
     }
 
     ui->text_edit_right->setText(result);
+    if(thread_copy.joinable()) {
+        thread_copy.join();
+    }
 }
 
 void MainWindow::on_button_clear_clicked() {
     qDebug("Clearing data");
     ui->text_edit_right->clear();
-    tmp_filter.clear();
+    plaintext_backup.clear();
     ui->text_edit_left->clear();
     ui->text_edit_left->setReadOnly(false);
     ui->option_copy->setEnabled(false);
@@ -238,22 +247,24 @@ void MainWindow::on_button_clear_clicked() {
     file_paths.clear();
 }
 
-void MainWindow::run_copy_thread(QQueue<QPair<QString, QString>> files) {
+void MainWindow::run_copy_thread(MainWindow *w) {
+    w->ui->button_go->setEnabled(false);
     QPair<QString, QString> file;
-    while(!files.isEmpty()) {
-        file = files.dequeue();
-        qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
+    while(!w->copy_queue.isEmpty()) {
+        file = w->copy_queue.dequeue();
+
 
         if(QFile(file.second).exists() && QFile(file.second).size() < QFile(file.first).size()) {
-            qDebug("Destination already exists. Overwriting with larger file.");
+            qDebug("Destination already exists, but this file is larger.");
+            qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
             QFile::remove(file.second);
             QFile::copy(file.first, file.second);
         } else if(!QFile(file.second).exists()) {
+            qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
             QFile::copy(file.first, file.second);
-        } else {
-            qDebug("Abort copy.");
         }
     }
+    w->ui->button_go->setEnabled(true);
 }
 
 void MainWindow::run_init_thread(MainWindow *w) {
@@ -299,10 +310,10 @@ void MainWindow::run_init_thread(MainWindow *w) {
 
             // auto update executable
             if (local_main_version < remote_main_version) {
-                qCritical("Texture Mapper is outdated, updating from %s...", url_executable.arg(remote_db_version).toStdString().c_str());
+                qCritical("Texture Mapper is outdated, updating from %s...", url_executable.arg(remote_main_version).toStdString().c_str());
 
                 QNetworkAccessManager manager;
-                QNetworkRequest req(QUrl(url_executable.arg(remote_db_version)));
+                QNetworkRequest req(QUrl(url_executable.arg(remote_main_version)));
                 req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
                 QNetworkReply *response_exec = manager.get(req);
 
@@ -329,7 +340,7 @@ void MainWindow::run_init_thread(MainWindow *w) {
                 }
             }
         } else {
-            qDebug("We are running the latest available version of the tools");
+            qDebug("Running the latest available version of the tool");
         }
 
         QJsonObject new_json;
