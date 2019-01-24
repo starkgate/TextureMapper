@@ -38,6 +38,9 @@ cmake-build-debug
 *.bak
 *.db
 
+release/*
+debug/*
+
 # Qt
 Makefile*
 .qmake.stash
