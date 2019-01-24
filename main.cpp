@@ -266,23 +266,25 @@ void MainWindow::run_init_thread(MainWindow *w) {
     event.exec();
 
     QFile version_file("version.json");
+    QFile::remove("TextureMapper.exe~");
 
     if (response->error() != QNetworkReply::NetworkError::NoError) {
         qCritical("%d error encountered while downloading the version file",
                   response->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-    } else if (version_file.open(QIODevice::ReadWrite)) {
-        auto local_json = QJsonDocument::fromJson(version_file.readAll().toStdString().c_str()).object();
-        auto remote_json = QJsonDocument::fromJson(response->readAll().toStdString().c_str()).object();
+    } else if (version_file.open(QFile::ReadWrite)) {
+        QJsonObject local_json = QJsonDocument::fromJson(version_file.readAll()).object();
+        QJsonObject remote_json = QJsonDocument::fromJson(response->readAll()).object();
 
-        auto local_db_version = local_json["database-version"].toInt();
-        auto local_main_version = local_json["main-version"].toInt();
-        auto remote_db_version = remote_json["database-version"].toInt();
-        auto remote_main_version = remote_json["main-version"].toInt();
+        int local_db_version = local_json.value("database-version").toInt();
+        int local_main_version = local_json.value("main-version").toInt();
+        int remote_db_version = remote_json.value("database-version").toInt();
+        int remote_main_version = remote_json.value("main-version").toInt();
 
         qDebug("Currently running : TextureMapper v%d, database v%d", local_main_version, local_db_version);
         if (local_db_version < remote_db_version || local_main_version < remote_main_version) {
             qDebug("Latest version : TextureMapper v%d, database v%d", remote_main_version, remote_db_version);
 
+            // auto update database
             if (local_db_version < remote_db_version) {
                 qCritical("Database is outdated, removing the old file for update...");
 
@@ -292,18 +294,51 @@ void MainWindow::run_init_thread(MainWindow *w) {
                     f.remove();
                 }
 
-                local_json["database-version"] = remote_db_version;
-                local_json["main-version"] = local_main_version;
-                version_file.write(QJsonDocument(local_json).toJson());
+                local_db_version = remote_db_version;
             }
 
+            // auto update executable
             if (local_main_version < remote_main_version) {
-                qCritical("Texture Mapper is outdated, consider updating manually...");
-                // TODO autoupdate
+                qCritical("Texture Mapper is outdated, updating from %s...", url_executable.arg(remote_db_version).toStdString().c_str());
+
+                QNetworkAccessManager manager;
+                QNetworkRequest req(QUrl(url_executable.arg(remote_db_version)));
+                req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+                QNetworkReply *response_exec = manager.get(req);
+
+                QEventLoop event_exec;
+                QObject::connect(response_exec, SIGNAL(finished()), &event_exec, SLOT(quit()));
+                event_exec.exec();
+                qDebug() << response_exec->size();
+
+                if(response_exec->error() != QNetworkReply::NetworkError::NoError) {
+                    qCritical("%d error encountered while downloading executable, abort update",
+                              response_exec->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+                } else {
+                    QFile::rename("TextureMapper.exe", "TextureMapper.exe~"); // rename current executable
+                    QFile updateVersion("TextureMapper.exe");
+                    if (!updateVersion.open(QIODevice::WriteOnly)) {
+                        qCritical("Can't open executable update file");
+                    } else {
+                        updateVersion.write(response_exec->readAll());
+                        updateVersion.close();
+                        qDebug("Updated executable to version %d, restart for it to take effect...", remote_main_version);
+                    }
+
+                    local_main_version = remote_main_version;
+                }
             }
         } else {
             qDebug("We are running the latest available version of the tools");
         }
+
+        QJsonObject new_json;
+        new_json.insert("database-version", local_db_version);
+        new_json.insert("main-version", local_main_version);
+
+        version_file.close();
+        version_file.open(QFile::WriteOnly | QFile::Truncate);
+        version_file.write(QJsonDocument(new_json).toJson());
     } else {
         qCritical("Couldn't check version of the tool");
     }

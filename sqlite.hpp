@@ -18,6 +18,7 @@
 
 const QUrl url_vanilla("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/vanilla.csv");
 const QUrl url_duplicates("https://raw.githubusercontent.com/CreeperLava/TextureMapper/master/bin/duplicates.csv");
+const QString url_executable("https://github.com/CreeperLava/TextureMapper/releases/download/v%1.0/texturemapper.exe");
 
 const QString query_create_database_duplicates(
         "create table duplicates ("
