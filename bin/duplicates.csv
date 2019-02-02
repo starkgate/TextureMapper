@@ -2206,6 +2206,7 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 4507,1,0x97999F01,"Mass_Relay_01_Emis",1024,512,0,"DXT5",""
 4507,2,0x97999F01,"Mass_Relay_01_Emis",1024,512,0,"DXT5",""
 4508,1,0xC98597D9,"Mass_Relay_01_Norm",1024,512,0,"DXT1",""
+4508,1,0x8B325741,"VEH_Mass_Relay_01_Norm_Stack",1024,512,0,"ATI2",""
 4508,2,0xC98597D9,"Mass_Relay_01_Norm",1024,512,0,"DXT1",""
 4509,1,0xE434FAB5,"Mass_Relay_01_Spec",1024,512,0,"DXT1",""
 4509,2,0xE434FAB5,"Mass_Relay_01_Spec",1024,512,0,"DXT1",""
@@ -7558,3 +7559,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8569,3,0x4980CF57,"Hrv_Wing",64,64,1,"DXT5","Slightly different green layer"
 8570,3,0x94128A0F,"CBT_HRV_NKD_LowRes",64,64,0,"DXT1",""
 8570,3,0x82EC1316,"CBT_HRV_NKD_MAIN_diff",1024,1024,0,"DXT1",""
+8571,1,0x480CA0D9,"Mass_Relay_01_RotMask",64,64,0,"G8L8",""
+8571,1,0x0618320D,"VEH_Mass_Relay_01_RotMask",128,128,0,"G8L8",""
