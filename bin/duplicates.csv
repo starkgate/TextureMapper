@@ -4982,6 +4982,7 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 7012,3,0xA4A31889,"Neon_Bloon",64,256,0,"DXT1",""
 7013,2,0xAFB571D3,"Neon_Detail02_Norm",256,256,0,"DXT1",""
 7013,3,0x9620981A,"Neon_Detail02_Norm",128,128,0,"V8U8",""
+7014,1,0xDEDB05CB,"STA60_DOOR01_DIFF",512,512,2,"DXT5","Brightness, colour, alpha"
 7014,2,0xAF889CE2,"Neon_Door01_DIFF",512,512,0,"DXT5",""
 7014,3,0xAF889CE2,"Neon_Door01_DIFF",512,512,0,"DXT5",""
 7015,2,0x4F969FE1,"Neon_DoorGlass01_DIFF",512,512,0,"DXT5",""
