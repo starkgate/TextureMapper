@@ -118,9 +118,11 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
     QString selected_game(QString::number(ui->combobox_game->currentIndex() + 1));
     QSqlQuery query(database);
 
-    query.exec(query_standalone.arg(hash, selected_game));
+    query.exec(query_standalone.arg(hash));
     if (query.next()) { // found standalone match
-        matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
+        if(query.value(2) == selected_game) {
+            matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
+        }
     } else {
         qWarning("Texture not found in vanilla database, skipping...");
         return matches;
