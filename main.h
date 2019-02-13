@@ -53,6 +53,7 @@ public:
     const QPushButton *button_clear;
     const QCheckBox *option_copy;
     const QCheckBox *option_names;
+    const QCheckBox *option_rename;
     const QComboBox *combobox_game;
     QTextEdit *text_edit_right;
     const QTextEdit *text_edit_left;
@@ -74,6 +75,7 @@ public:
 
     ~MainWindow() override;
     Ui::MainWindow *ui;
+    void rename();
 };
 
 #endif

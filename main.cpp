@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     option_copy = this->findChild<QCheckBox *>("option_copy");
     option_names = this->findChild<QCheckBox *>("option_names");
+    option_rename = this->findChild<QCheckBox *>("option_rename");
 
     combobox_game = this->findChild<QComboBox *>("combobox_game");
     text_edit_left = this->findChild<QTextEdit *>("text_edit_left");
@@ -104,6 +105,7 @@ void MainWindow::on_file_chooser_src_clicked() {
         ui->text_edit_left->setText(res);
         ui->text_edit_left->setReadOnly(true);
         ui->option_copy->setEnabled(true);
+        ui->option_rename->setEnabled(true);
         ui->file_chooser_dst->setEnabled(true);
 
         qDebug("Selected %d files, text edit is now read-only", file_paths.size());
@@ -163,10 +165,42 @@ QList<QString> MainWindow::get_hashes_from_name(const QString name) {
     return matches;
 }
 
+void MainWindow::rename() {
+    for (const QFileInfo &entry : file_paths) { // iterate over the selected files
+        QRegularExpressionMatch match = regex_hash.match(entry.fileName());
+
+        // check presence of hash in filename
+        QList<QString> hashes;
+        if (match.hasMatch()) {
+            qDebug("Found matching hash for %s", match.captured(0).toStdString().c_str());
+
+            QString groupid;
+            QList<QList<QVariant>> matches; // { crc, name, grade, notes }
+            QString selected_game(QString::number(ui->combobox_game->currentIndex() + 1));
+            QSqlQuery query(database);
+
+            query.exec(query_standalone.arg(match.captured(0)));
+            if (query.next()) { // found standalone match
+                if(query.value(2) == selected_game) {
+                    QString crc = hash_from_int(query.value(0));
+                    QString name = query.value(1).toString();
+                    QFile::rename(entry.filePath(), QDir(path_dest).filePath(QString("%1_%2.%3")).arg(name, crc, entry.suffix()));
+                }
+            }
+        }
+    }
+}
+
 void MainWindow::on_button_go_clicked() {
     bool file_mode = ui->text_edit_left->isReadOnly();
     bool copy_mode = ui->option_copy->isChecked();
     bool names_mode = ui->option_names->isChecked();
+    bool rename_mode = ui->option_rename->isChecked();
+
+    if(file_mode && rename_mode) {
+        rename();
+        return;
+    }
 
     // CHECKS
     if(!file_mode) generate_file_paths();
@@ -245,6 +279,7 @@ void MainWindow::on_button_clear_clicked() {
     ui->text_edit_left->clear();
     ui->text_edit_left->setReadOnly(false);
     ui->option_copy->setEnabled(false);
+    ui->option_rename->setEnabled(false);
     ui->file_chooser_dst->setEnabled(false);
     file_paths.clear();
 }
