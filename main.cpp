@@ -307,18 +307,21 @@ void MainWindow::run_copy_thread(MainWindow *w) {
     while(!w->copy_queue.isEmpty()) {
         file = w->copy_queue.dequeue();
 
+        QFileInfo new_file = QFileInfo(file.second);
 
-        if(QFile(file.second).exists()) {
-            qDebug("Destination already exists, renaming");
+        if(new_file.exists()) {
+            qDebug("File exists, renaming...");
+            QString new_file_name = QDir(new_file.absolutePath()).filePath(new_file.baseName());
+
             int i = 1;
-            while(QFile(file.second + "_" + i).exists()) { i++; }
-
-            qDebug("Copying %s to %s", file.first.toStdString().c_str(), (file.second + "_" + i).toStdString().c_str());
-            QFile::copy(file.first, file.second + "_" + i);
-        } else {
-            qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
-            QFile::copy(file.first, file.second);
+            while(new_file.exists()) {
+                new_file = QFileInfo(QString("%1_%2.%3").arg(new_file_name, QString::number(i), new_file.suffix()));
+                i++;
+            }
         }
+
+        qDebug("Copying %s to %s", file.first.toStdString().c_str(), new_file.filePath().toStdString().c_str());
+        QFile::copy(file.first, new_file.filePath());
     }
     w->ui->button_go->setEnabled(true);
 }
