@@ -30,7 +30,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
 
     option_copy = this->findChild<QCheckBox *>("option_copy");
-    option_names = this->findChild<QCheckBox *>("option_names");
     option_rename = this->findChild<QCheckBox *>("option_rename");
 
     combobox_game = this->findChild<QComboBox *>("combobox_game");
@@ -121,9 +120,12 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
     QSqlQuery query(database);
 
     query.exec(query_standalone.arg(hash));
-    if (query.next()) { // found standalone match
-        if(query.value(2) == selected_game) {
-            matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
+    if (query.isSelect()) { // found standalone match
+        while(query.next()) {
+            if(query.value(2) == selected_game) {
+                matches.append({hash_from_int(query.value(0)), query.value(1), 3, "" });
+                query.last();
+            }
         }
     } else {
         qWarning("Texture not found in vanilla database, skipping...");
@@ -146,66 +148,78 @@ QList<QList<QVariant>> MainWindow::get_duplicates_from_hash(const QString hash) 
     return matches;
 }
 
-void MainWindow::generate_file_paths() {
-    // if we're in string mode, generate "fake" QFileInfos to fill file_paths
-    file_paths.clear();
-    for(QString s : ui->text_edit_left->toPlainText().split("\n", QString::SkipEmptyParts)) {
-        file_paths.append(QFileInfo(s));
-    }
-}
+void MainWindow::go_initialize() {
+    // options
+    file_mode = ui->text_edit_left->isReadOnly();
+    copy_mode = ui->option_copy->isChecked();
+    rename_mode = ui->option_rename->isChecked();
 
-QList<QString> MainWindow::get_hashes_from_name(const QString name) {
-    QSqlQuery query(database);
-    QList<QString> matches;
-
-    query.exec(query_name.arg(name)); // get all hashes that match the name
-    while (query.next()) { // for each match, get all reusable textures
-        matches.append(query.value(0).toString());
-    }
-    return matches;
-}
-
-void MainWindow::rename() {
-    for (const QFileInfo &entry : file_paths) { // iterate over the selected files
-        QRegularExpressionMatch match = regex_hash.match(entry.fileName());
-
-        // check presence of hash in filename
-        QList<QString> hashes;
-        if (match.hasMatch()) {
-            qDebug("Found matching hash for %s", match.captured(0).toStdString().c_str());
-
-            QString groupid;
-            QList<QList<QVariant>> matches; // { crc, name, grade, notes }
-            QString selected_game(QString::number(ui->combobox_game->currentIndex() + 1));
-            QSqlQuery query(database);
-
-            query.exec(query_standalone.arg(match.captured(0)));
-            if (query.next()) { // found standalone match
-                if(query.value(2) == selected_game) {
-                    QString crc = hash_from_int(query.value(0));
-                    QString name = query.value(1).toString();
-                    QFile::rename(entry.filePath(), QDir(path_dest).filePath(QString("%1_%2.%3")).arg(name, crc, entry.suffix()));
-                }
-            }
+    // if we're in string mode, generate "fake" QFileInfos to fill file_paths, otherwise do nothing
+    if(!file_mode) {
+        file_paths.clear();
+        for(QString s : ui->text_edit_left->toPlainText().split("\n", QString::SkipEmptyParts)) {
+            file_paths.append(QFileInfo(s));
         }
     }
 }
 
-void MainWindow::on_button_go_clicked() {
-    bool file_mode = ui->text_edit_left->isReadOnly();
-    bool copy_mode = ui->option_copy->isChecked();
-    bool names_mode = ui->option_names->isChecked();
-    bool rename_mode = ui->option_rename->isChecked();
+/*
+ * go_rename_mode: attempt to find the hashes and names of the files in text_edit_left
+ * Rename selected files, if any, and display result
+ */
+void MainWindow::go_rename_mode() {
+    QString result;
+    QTextStream ts(&result, QIODevice::WriteOnly);
+    QString selected_game(QString::number(combobox_game->currentIndex() + 1));
+    QSqlQuery query(database);
 
-    if(file_mode && rename_mode) {
-        rename();
-        return;
+    qDebug("Starting search...");
+    for (const QFileInfo &entry : file_paths) { // iterate over the selected files
+        QString old_path = entry.filePath();
+        QString new_path;
+
+        QRegularExpressionMatch match = regex_hash.match(entry.fileName());
+
+        if (match.hasMatch()) { // check presence of hash in filename
+            qDebug("Found matching hash for %s", match.captured(0).toStdString().c_str());
+
+            query.exec(query_name_from_hash_game.arg(match.captured(0), selected_game));
+            if (query.next()) { // the matching hash corresponds to a texture
+                qDebug("Matching hash corresponds to a texture");
+                QString game = query.value(2).toString();
+                QString crc = hash_from_int(query.value(0));
+                QString name = query.value(1).toString();
+
+                new_path = QDir(path_dest).filePath(QString("%1_%2.%3")).arg(name, crc, entry.suffix());
+                ts << (QString("%1 -> %2<br>")).arg(crc, name);
+
+                if(file_mode) {
+                    QFile::rename(old_path, new_path);
+                }
+            }
+        } else { // no hash in filename, but we'll attempt to find it from the texture name
+           query.exec(query_hash_from_name.arg(entry.baseName())); // get all hashes that match the name
+
+           if(query.next()) {
+               qDebug("Found matching hash for %s", entry.baseName().toStdString().c_str());
+
+               ts << entry.baseName() << " <font color=\"orange\">(from name)</font><br>";
+               do { // for each match, get all reusable textures
+                   QString game = query.value(2).toString();
+                   QString crc = hash_from_int(query.value(0));
+                   QString name = query.value(1).toString();
+
+                   ts << (QString("(ME%1) %2 %3<br>")).arg(game, crc, name);
+               } while (query.next());
+               ts << "<br>";
+           }
+       }
     }
 
-    // CHECKS
-    if(!file_mode) generate_file_paths();
-    if(file_paths.isEmpty()) return;
+    ui->text_edit_right->setText(result);
+}
 
+void MainWindow::go_normal_mode() {
     QString result;
     QTextStream ts(&result, QIODevice::WriteOnly);
     QString game(QString::number(combobox_game->currentIndex() + 1));
@@ -216,7 +230,6 @@ void MainWindow::on_button_go_clicked() {
     }
 
     qDebug("Checking duplicates...");
-    bool from_name;
     for (const QFileInfo &entry : file_paths) { // iterate over the selected files
         QRegularExpressionMatch match = regex_hash.match(entry.fileName());
 
@@ -225,16 +238,6 @@ void MainWindow::on_button_go_clicked() {
         if (match.hasMatch()) {
             hashes.append(match.captured(0));
             qDebug("Found matching hash for %s", match.captured(0).toStdString().c_str());
-            from_name = false;
-        } else if(names_mode) {
-            QList<QString> h = get_hashes_from_name(entry.baseName());
-            if(!h.isEmpty()) {
-                for(QString hash : h) {
-                    hashes.append(hash_from_int(hash));
-                }
-                qDebug("Found %d matching hashes for name %s", hashes.size(), entry.fileName().toStdString().c_str());
-                from_name = true;
-            }
         }
 
         QList<QList<QVariant>> search_results;
@@ -242,7 +245,7 @@ void MainWindow::on_button_go_clicked() {
             search_results = get_duplicates_from_hash(hash);
 
             if(!search_results.isEmpty()) {
-                ts << hash << (from_name ? " <font color=\"orange\">(from name)</font><br>" : "<br>");
+                ts << hash << "<br>";
                 for (QList<QVariant> search : search_results) {
                     QString crc = search[0].toString();
                     QString name = search[1].toString();
@@ -272,6 +275,20 @@ void MainWindow::on_button_go_clicked() {
     }
 }
 
+void MainWindow::on_button_go_clicked() {
+    // INITIALIZATION
+    go_initialize();
+
+    // if there is nothing to do, return immediately
+    if(file_paths.isEmpty()) return;
+
+    if(rename_mode) {
+        go_rename_mode();
+    } else {
+        go_normal_mode();
+    }
+}
+
 void MainWindow::on_button_clear_clicked() {
     qDebug("Clearing data");
     ui->text_edit_right->clear();
@@ -291,12 +308,14 @@ void MainWindow::run_copy_thread(MainWindow *w) {
         file = w->copy_queue.dequeue();
 
 
-        if(QFile(file.second).exists() && QFile(file.second).size() < QFile(file.first).size()) {
-            qDebug("Destination already exists, but this file is larger.");
-            qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
-            QFile::remove(file.second);
-            QFile::copy(file.first, file.second);
-        } else if(!QFile(file.second).exists()) {
+        if(QFile(file.second).exists()) {
+            qDebug("Destination already exists, renaming");
+            int i = 1;
+            while(QFile(file.second + "_" + i).exists()) { i++; }
+
+            qDebug("Copying %s to %s", file.first.toStdString().c_str(), (file.second + "_" + i).toStdString().c_str());
+            QFile::copy(file.first, file.second + "_" + i);
+        } else {
             qDebug("Copying %s to %s", file.first.toStdString().c_str(), file.second.toStdString().c_str());
             QFile::copy(file.first, file.second);
         }

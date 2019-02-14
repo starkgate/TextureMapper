@@ -39,7 +39,7 @@ public:
     void sqlite_check_query(QSqlQuery &query);
 
     QList<QString> get_hashes_from_name(const QString name);
-    void generate_file_paths();
+    void go_initialize();
     static void run_copy_thread(MainWindow *w);
     static void run_init_thread(MainWindow *w);
 
@@ -52,7 +52,6 @@ public:
     const QPushButton *button_go;
     const QPushButton *button_clear;
     const QCheckBox *option_copy;
-    const QCheckBox *option_names;
     const QCheckBox *option_rename;
     const QComboBox *combobox_game;
     QTextEdit *text_edit_right;
@@ -73,9 +72,14 @@ public:
     std::thread thread_copy;
     QQueue<QPair<QString, QString>> copy_queue;
 
+    bool file_mode;
+    bool copy_mode;
+    bool rename_mode;
+
     ~MainWindow() override;
     Ui::MainWindow *ui;
-    void rename();
+    void go_rename_mode();
+    void go_normal_mode();
 };
 
 #endif

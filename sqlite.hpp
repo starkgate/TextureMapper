@@ -25,7 +25,7 @@ const QString query_create_database_duplicates(
         "groupid INTEGER,"
         "game INTEGER,"
         "crc INTEGER,"
-        "name TEXT,"
+        "name TEXT collate nocase,"
         "size_x INTEGER,"
         "size_y INTEGER,"
         "grade INTEGER,"
@@ -43,7 +43,7 @@ const QString query_create_database_vanilla(
         "create table vanilla ("
         "game INTEGER,"
         "crc INTEGER,"
-        "name TEXT,"
+        "name TEXT collate nocase,"
         "PRIMARY KEY(game, crc));");
 
 const QString query_index_database_vanilla(
@@ -51,10 +51,11 @@ const QString query_index_database_vanilla(
 
 const QString query_vacuum("vacuum");
 
-const QString query_standalone ("select crc, name, game from vanilla where crc=%1 limit 1");
+const QString query_name_from_hash_game ("select crc, name from vanilla where crc=%1 and game=%2 limit 1");
+const QString query_standalone ("select crc, name, game from vanilla where crc=%1");
 const QString query_groupid ("select groupid from duplicates where crc=%1 limit 1");
 const QString query_duplicates ("select crc, name, grade, notes from duplicates where groupid=%1 and game=%2 and not crc=%3");
-const QString query_name ("select crc from vanilla where name='%1'");
+const QString query_hash_from_name ("select crc, name, game from vanilla where name='%1'");
 
 /*
  * SQLite3 specific utility functions

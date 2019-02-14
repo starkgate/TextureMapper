@@ -46,7 +46,7 @@
        <number>8</number>
       </property>
       <item row="3" column="0">
-       <layout class="QHBoxLayout" name="hl1" stretch="0,0,0,0,0">
+       <layout class="QHBoxLayout" name="hl1" stretch="0,0,0,0">
         <property name="spacing">
          <number>8</number>
         </property>
@@ -67,22 +67,9 @@
          </spacer>
         </item>
         <item>
-         <widget class="QCheckBox" name="option_names">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to detect the hash based only on the name of textures. Don't use this option if you don't know what you're doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Names</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QCheckBox" name="option_rename">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Renames the selected files to name_hash, where name is the name of the texture and hash its hash.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the file name contains a hash, rename the file to name_hash. Otherwise, try to deduce the hash from the filename and display it in the right panel (no renaming : a name can correspond to multiple hashes).&lt;/p&gt;&lt;p&gt;If there are no files selected, the results will simply be displayed since there is nothing to rename.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Rename</string>
