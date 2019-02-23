@@ -7569,3 +7569,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8570,3,0x82EC1316,"CBT_HRV_NKD_MAIN_diff",1024,1024,0,"DXT1",""
 8571,1,0x480CA0D9,"Mass_Relay_01_RotMask",64,64,0,"G8L8",""
 8571,1,0x0618320D,"VEH_Mass_Relay_01_RotMask",128,128,0,"G8L8",""
+8572,2,0xAFAFEFF8,"Pod_Collector01_Diff",512,512,0,"DXT1",""
+8572,2,0x875D9CD8,"Pod_Collector01Hi_Diff",1024,1024,0,"DXT1",""
