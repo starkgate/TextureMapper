@@ -301,6 +301,8 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 1131,1,0x1AABB348,"STA60_GLASS01_Diff",256,256,0,"DXT5",""
 1132,1,0x1CFE77F9,"UNC01_SkyRed01tga",2048,512,0,"DXT1",""
 1132,1,0x7B62BFBA,"UNC01_SkyRed01tga",1024,256,0,"DXT1",""
+1132,1,0x544CC90A,"UNC01_SkyMagent01tga",1024,256,1,"DXT1","Difference - Colour"
+1132,1,0x2A03ED7D,"UNC01_SkyDRKRed01tga",1024,256,1,"DXT1","Difference - Brightness, colour"
 1132,1,0xE726C864,"UNC01_SkyRed01tga",512,128,0,"DXT1",""
 1133,1,0xFAEC8692,"UNC02_Rock01_Diff2",512,512,2,"DXT1","Differences - Colour"
 1133,1,0x95E1C3DC,"UNC02_Rock01_Diff2",256,256,2,"DXT5","Differences - Colour"
