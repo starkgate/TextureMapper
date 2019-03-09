@@ -2860,7 +2860,7 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 6064,3,0x23A93254,"Kitchen05_Clean_Norm",256,256,0,"DXT1",""
 6065,2,0x7AC69578,"Bartable01_Diff",512,512,0,"DXT5",""
 6065,3,0x7AC69578,"Bartable01_Diff",512,512,0,"DXT5",""
-6065,3,0x46A2FA25,"Kitchen05_Clean_Diff",512,512,0,"DXT1",""
+6065,3,0x46A2FA25,"Kitchen05_Clean_Diff",512,512,2,"DXT1","Brightness, alpha"
 6066,2,0xB5F43D5F,"BatteryPack01_Diff",256,256,0,"DXT1",""
 6066,3,0xDBD1DEF5,"BatteryPack01_Diff",256,256,0,"DXT1",""
 6067,2,0x57BE8E16,"BatteryPack01_Msk3",128,128,0,"DXT1",""
