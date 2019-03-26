@@ -7575,3 +7575,7 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8571,1,0x0618320D,"VEH_Mass_Relay_01_RotMask",128,128,0,"G8L8",""
 8572,2,0xAFAFEFF8,"Pod_Collector01_Diff",512,512,0,"DXT1",""
 8572,2,0x875D9CD8,"Pod_Collector01Hi_Diff",1024,1024,0,"DXT1",""
+8573,1,0x9CFA8605,"Bunk_Beds_01_Diff_Dup",512,512,0,"DXT1",""
+8573,1,0x3C26FA85,"Bunk_Beds_01_Diff",128,128,0,"DXT1",""
+8574,1,0x9FA5F7E6,"BUnk_Beds_01_Norm_Dup",512,512,0,"DXT1",""
+8574,1,0xDBFB94D1,"BUnk_Beds_01_Norm",128,128,0,"DXT1",""
