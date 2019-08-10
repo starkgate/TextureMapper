@@ -7579,3 +7579,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8573,1,0x3C26FA85,"Bunk_Beds_01_Diff",128,128,0,"DXT1",""
 8574,1,0x9FA5F7E6,"BUnk_Beds_01_Norm_Dup",512,512,0,"DXT1",""
 8574,1,0xDBFB94D1,"BUnk_Beds_01_Norm",128,128,0,"DXT1",""
+8575,3,0x41649510,"Ground_Moss01_Diff",512,512,2,"DXT1","Leaves"
+8575,3,0xB7943629,"Ground_Moss01_DiffGround_Dirt01_Diff",256,256,2,"DXT1","No leaves"
