@@ -7526,8 +7526,6 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8547,3,0xC0052E9C,"AlliDropShip_Dirty_Frt_Spec",1024,1024,-1,"DXT1",""
 8548,3,0x4B632D10,"Model_AlliDropShip_Diff",128,128,-1,"DXT1",""
 8548,3,0x62F1F1E3,"AlliDropShip_Clean_Frt_Diff",1024,1024,-1,"DXT1",""
-8549,3,0xDE2C74F3,"SandyShrub_Diff",1024,1024,-1,"DXT1",""
-8549,3,0x9FA93FFE,"Sand_02_Diff",256,256,-1,"DXT1",""
 8550,3,0x9FFEA46C,"GethHoverA_Diff",1024,512,-1,"DXT1",""
 8550,3,0x6B834A9A,"GethHoverA_Diff_Cine",2048,1024,-1,"DXT1",""
 8551,3,0xB346271D,"GethHoverA_Msk3_Cine",1024,512,-1,"DXT1",""
