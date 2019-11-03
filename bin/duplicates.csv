@@ -7579,5 +7579,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8574,1,0xDBFB94D1,"BUnk_Beds_01_Norm",128,128,0,"DXT1",""
 8575,3,0x41649510,"Ground_Moss01_Diff",512,512,2,"DXT1","Leaves"
 8575,3,0xB7943629,"Ground_Moss01_DiffGround_Dirt01_Diff",256,256,2,"DXT1","No leaves"
-8576,3,0xB19BAC6B,"ProtheanPod_Base_Cine_Norm",1024,1024,0,"V8U8",""
-8576,3,0x051337B5,"ProtheanPod_Base_Norm",512,512,0,"V8U8",""
+8576,3,0x1B511AFE,"ProtheanPod_Base_Cine_Norm",1024,1024,0,"V8U8",""
+8576,3,0x926A3F31,"ProtheanPod_Base_Norm",512,512,0,"V8U8",""
