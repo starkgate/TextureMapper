@@ -7583,3 +7583,5 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 8576,3,0x926A3F31,"ProtheanPod_Base_Norm",512,512,0,"V8U8",""
 8577,3,0xE2985BF5,"GethFighterA_Diff",1024,1024,0,"DXT1",""
 8577,3,0x147FA8FD,"Model_GethFighter_Diff",128,128,0,"DXT1",""
+8578,3,0x53A0F806,"Model_TurianFrigate_Diff",128,128,0,"DXT1",""
+8578,3,0x9FCE40CE,"Turian_Frigate_Diff",1024,1024,0,"DXT1",""
