@@ -3051,7 +3051,7 @@ groupid,game,crc,name,size_x,size_y,grade,format,notes
 6154,3,0x1F447774,"CBT_AGS_Diff",1024,1024,0,"DXT1",""
 6155,2,0x6A3FC303,"CBT_AGS_MSK",128,128,0,"DXT5",""
 6155,3,0x6A3FC303,"CBT_AGS_MSK",128,128,0,"DXT5",""
-6156,2,0x590F9023,"CBT_AGS_Norm",512,512,0,"ATI2_3Dc",""
+6156,2,0x590F9023,"CBT_AGS_Norm",512,512,2,"ATI2_3Dc","Minor differences image"
 6156,3,0x9F41F35D,"CBT_AGSa_Norm",512,512,2,"V8U8","Minor differences image"
 6156,3,0xF6315687,"CBT_AGSc_Norm",512,512,2,"V8U8","Minor differences image"
 6156,3,0xABBA847A,"CBT_AGS_Norm",256,256,0,"V8U8",""
